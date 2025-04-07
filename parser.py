@@ -3,10 +3,9 @@ import re
 
 # PARSER - puts lines of pyspark job into a list
 # Get job name from user
-# try:
-#     jobName = sys.argv[1]
-# except: sys.exit("INPUT ERROR: must specify a job name from jobs folder ending in .py")
-jobName = "job1.py"
+try:
+    jobName = sys.argv[1]
+except: sys.exit("INPUT ERROR: must specify a job name from jobs folder ending in .py")
 
 job = open("./jobs/"+jobName, "r")
 lines = [line.rstrip() for line in job]
