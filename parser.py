@@ -10,10 +10,8 @@ jobName = "job1.py"
 
 job = open("./jobs/"+jobName, "r")
 lines = [line.rstrip() for line in job]
-# END PARSER
 
-# MAIN LOGIC - loop through the lines
-# This is where we need to start associating line number with operations
+# associating line number with lambda functions
 i = 0
 while i < (len(lines)):
     if "lambda" in lines[i] and lines[i][0] != '#':
