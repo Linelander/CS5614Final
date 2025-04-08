@@ -1,3 +1,7 @@
+#NOTE: User must:
+#       Use stampedRDD
+#       use stamp() instead of regular pyspark operations
+
 import sys
 import re
 
@@ -10,18 +14,14 @@ except: sys.exit("INPUT ERROR: must specify a job name from jobs folder ending i
 job = open("./jobs/"+jobName, "r")
 lines = [line.rstrip() for line in job]
 
-# associating line number with lambda functions
+# put the line number into each stamp call
 i = 0
 while i < (len(lines)):
-    if "lambda" in lines[i] and lines[i][0] != '#':
-        while lines[i][len(lines[i]) - 1] == "\\": # skip to the end of multi-line expressions
-            i += 1
-        lines[i] += ".map(lambda x: (x, " + str(i) + "))"
+    if "currLineStamp" in lines[i]:
+        lines[i].replace("currLineStamp", str(i))
+        exec(lines[i])
     i += 1
 
-
-# for i in range(len(lines)):
-#     print(lines[i])
 
 # TODO: keep it from appending the tag after comments written at the end of lines like this:
 #   code.example() # test.map(lambda x:(x, 7))
