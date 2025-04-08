@@ -30,6 +30,7 @@ def parse_csv(path):
 def parse_time(ts):
     return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
 
+
 # Haversine distance in miles
 def haversine(lat1, lon1, lat2, lon2):
     R = 3956  # radius of Earth in miles
@@ -115,5 +116,8 @@ region_hour_counts = region_hour_counts.partitionBy(num_partitions, region_hour_
 # Step 6: Compute Count of Landing Sequences
 region_hour_date_seq = region_hour_counts.map(lambda x: (x[0][0], x[0][1], x[1], sequence(x[1])))
 # Output: (region_center_airport, date, hour, count_of_landings, landing_sequences)
-for item in region_hour_date_seq.collect():
-    print(item)
+# for item in region_hour_date_seq.collect():
+#     print(item)
+
+
+# print(type(region_hour_date_seq))
