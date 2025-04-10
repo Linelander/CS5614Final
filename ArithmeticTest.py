@@ -21,19 +21,19 @@ three.line_numbers = [17] # line number of creation. we'll automate this later
 
 print("GENEALOGY TEST")
 print("--------------")
-a = StampMath.arithmetic(22, operator.sub, 6, 8, 5)
+a = StampMath.arithmetic(24, operator.sub, 6, 8, 5)
 print("subtraction with stamped middle (expect -7): " + str(a.value) + "\n")
 # a = -7
 
-b = StampMath.arithmetic(25, operator.sub, 3, a, 6)
+b = StampMath.arithmetic(28, operator.sub, 3, a, 6)
 print("subtraction 2 (expect 4): " + str(b.value) + "\n")
 # b = 4
 
-c = StampMath.arithmetic(28, operator.sub, b, 6, 5)
+c = StampMath.arithmetic(32, operator.sub, b, 6, 5)
 print("subtraction 2 starting with stamped (expect -7): " + str(c.value) + "\n")
 # c = -7
 
-d = StampMath.arithmetic(31, operator.sub, 9, 7, c)
+d = StampMath.arithmetic(36, operator.sub, 9, 7, c)
 print("subtraction on only stamped numbers (expect 9): " + str(d.value) + "\n")
 # d = 9
 
