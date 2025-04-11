@@ -38,3 +38,7 @@ print("subtraction with stamp at end (expect 9): " + str(d.value) + "\n")
 # d = 9
 
 print("Genealogy of stamped value named d: " + str(d.line_numbers))
+
+## word count
+print('-'*5, 'word count', '-'*5)
+print(StampMath.getWordCount(d.line_numbers))
