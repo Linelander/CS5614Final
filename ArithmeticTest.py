@@ -39,6 +39,13 @@ print("subtraction with stamp at end (expect 9): " + str(d.value) + "\n")
 
 print("Genealogy of stamped value named d: " + str(d.line_numbers))
 
-## word count
-print('-'*5, 'word count', '-'*5)
-print(StampMath.getWordCount(d.line_numbers))
+## string stamp
+print('-'*5, 'string stamp', '-'*5)
+s1 = StampMath.StampedValue('Hello')
+s2 = StampMath.StampedValue(' ')
+firstWord = StampMath.string_concat(46, s1, s2)
+s3 = StampMath.StampedValue('World')
+s4 = StampMath.StampedValue('!')
+secondWord = StampMath.string_concat(49, s3, s4)
+whole_string = StampMath.string_concat(50, firstWord, secondWord)
+print(whole_string.value, whole_string.line_numbers)
