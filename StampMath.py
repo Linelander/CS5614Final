@@ -36,3 +36,19 @@ def arithmetic(operation, *args):
     final = StampedValue(x)
     final.line_numbers = lines
     return final
+
+# def getWordCount(line_numbers):
+#     total_word_count = 0
+#     for line_number in line_numbers:
+#         print('line number:', line_number)
+#         total_word_count += readFileLineWordCount('ArithmeticTest.py', line_number)
+
+#     return total_word_count
+
+# def readFileLineWordCount(filepath, line_number):
+#     with open(filepath, 'r') as file:
+#         lines = file.readlines()
+
+#     word_count = len(lines[line_number - 1].split())
+#     print(lines[line_number - 1].split(), '| length:', word_count)
+#     return word_count

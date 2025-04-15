@@ -39,8 +39,14 @@ import operator
 
 # print("Genealogy of stamped value named d: " + str(d.line_numbers))
 
-a = 3
-b = 4
-c = arithmetic(operator.sub, 20, 10)
-x = arithmetic(operator.add, a, b, c)
-print(x.value, x.line_numbers)
+# ## word count
+# print('-'*5, 'word count', '-'*5)
+# print(StampMath.getWordCount(d.line_numbers))
+
+# # print("Genealogy of stamped value named d: " + str(d.line_numbers))
+
+# a = 3
+# b = 4
+# c = arithmetic(operator.sub, 20, 10)
+# x = arithmetic(operator.add, a, b, c)
+# print(x.value, x.line_numbers)
