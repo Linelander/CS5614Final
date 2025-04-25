@@ -38,7 +38,13 @@ def arithmetic(operation, *args):
     return final
 
 
-# Arbitrate pyspark methods. Add stamping
+# This method can stamp asymmetric operations, but only if every single line number in the RDD should be included in the output.
+# It needs to be improved to be more aware of where the things contained in RDDs get their data from.abs
+# What if you had an RDD with data having these line numbers
+# (a,[1,3]) (a,[5,7]) (b,[9,11])
+# And then you did some by-key operation?
+# This function in its current state would not realize that the tuple resulting in the operation carried out on all tuples
+# having the key a shouldn't contain b's line numbers 9 & 11.
 def asymOperation(resilient, methodstr, *args):
     lines_list = []
     
@@ -49,10 +55,8 @@ def asymOperation(resilient, methodstr, *args):
 
     # look for stamped values in rdd
     if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
-        def accrueLines(stamped, list):
-            list += stamped.line_numbers
-        resilient.foreach(lambda x: (accrueLines(x, lines_list)))
-        # TODO: get a normal rdd (if input is stamped)
+        lines_list = resilient.flatMap(lambda x: x.line_numbers).distinct().collect()
+        print("LINES LIST: " + str(lines_list))
         precursor = resilient.map(lambda x: (x.value))
     else:
         precursor = resilient
