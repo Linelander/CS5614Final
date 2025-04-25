@@ -46,7 +46,10 @@ def oneToMany(resilient, methodstr, *args):
     line_num = caller_frame.f_lineno
 
     # TODO: get line numbers of resilient
-    rdd_lines = # ...
+    rdd_lines = []
+    def accrueLines(stamped):
+        rdd_lines += stamped.line_numbers
+    resilient.foreach(accrueLines)
 
     # TODO: Apply the user supplied method. NOTE: use getattr()
     method = # ...
@@ -55,3 +58,6 @@ def oneToMany(resilient, methodstr, *args):
     # TODO: Stamp all line numbers on the data
     lines_list = rdd_lines += [line_num]
     return original.map(lambda x: (StampedValue(x, lines_list)))
+
+
+
