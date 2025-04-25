@@ -2,9 +2,9 @@ import operator
 import inspect
 
 class StampedValue:
-    def __init__(self, val):
+    def __init__(self, val, line_num):
         self.value = val
-        self.line_numbers = []
+        self.line_numbers = line_num
 
 def arithmetic(operation, *args):
     # empty list lines inherits line numbers of all number arguments
@@ -33,22 +33,25 @@ def arithmetic(operation, *args):
     lines += [line_num]
 
     # Stamp x with [lines]
-    final = StampedValue(x)
-    final.line_numbers = lines
+    final = StampedValue(x, lines)
     return final
 
-# def getWordCount(line_numbers):
-#     total_word_count = 0
-#     for line_number in line_numbers:
-#         print('line number:', line_number)
-#         total_word_count += readFileLineWordCount('ArithmeticTest.py', line_number)
 
-#     return total_word_count
+# Arbitrate one to many pyspark methods
+# NOTE: this does not account for data in the RDD already being stamped. need to account for that in the stampedvalue constructor
+def oneToMany(resilient, methodstr, *args):
+    # Get line number of caller
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
 
-# def readFileLineWordCount(filepath, line_number):
-#     with open(filepath, 'r') as file:
-#         lines = file.readlines()
+    # TODO: get line numbers of resilient
+    rdd_lines = # ...
 
-#     word_count = len(lines[line_number - 1].split())
-#     print(lines[line_number - 1].split(), '| length:', word_count)
-#     return word_count
+    # TODO: Apply the user supplied method. NOTE: use getattr()
+    method = # ...
+    original = # ...
+
+    # TODO: Stamp all line numbers on the data
+    lines_list = rdd_lines += [line_num]
+    return original.map(lambda x: (StampedValue(x, lines_list)))
