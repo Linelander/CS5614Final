@@ -20,19 +20,19 @@ text = sc.textFile("./data/words.txt")
 # words1 = words
 # print(words1.collect())
 
-words = StampMath.stampMethod(text, 'flatMap', lambda line: line.split(" "))
+words = StampMath.asymOperation(text, 'flatMap', lambda line: line.split(" "))
 print("values from 1: " + str(words.map(lambda x: (x.value)).collect()))
 print("lines from 1: " + str(words.map(lambda x: (x.line_numbers)).collect()))
 
 print("--------------------------")
 
 # .map(lambda word: (word, 1))
-words2 = StampMath.stampMethod(words, "map", lambda word: (word, 1))
+words2 = StampMath.asymOperation(words, "map", lambda word: (word, 1))
 print("values from 2: " + str(words2.map(lambda x: (x.value)).collect()))
 print("lines from 2: " + str(words2.map(lambda x: (x.line_numbers)).collect()))
 
 
-# stamped_words2 = StampMath.stampMethod(words, "map()", lambda word: (word, 1))
+# stamped_words2 = StampMath.asymOperation(words, "map()", lambda word: (word, 1))
 
 
 

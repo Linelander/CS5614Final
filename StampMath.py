@@ -39,7 +39,7 @@ def arithmetic(operation, *args):
 
 
 # Arbitrate pyspark methods. Add stamping
-def stampMethod(resilient, methodstr, *args):
+def asymOperation(resilient, methodstr, *args):
     lines_list = []
     
     # Get line number of caller
@@ -57,7 +57,8 @@ def stampMethod(resilient, methodstr, *args):
     else:
         precursor = resilient
     
+    # Apply line numbers from input RDD + caller line to output
     method = getattr(precursor, methodstr)
-    original = method(*args)    # fallback for multi-arg methods
+    original = method(*args)
     lines_list += [line_num]
     return original.map(lambda x: (StampedValue(x, lines_list)))
