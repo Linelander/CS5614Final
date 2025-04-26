@@ -7,6 +7,7 @@ class StampedValue:
         self.value = val
         self.line_numbers = line_num
 
+# Perform simple arithmetic with stamping outside of RDDs
 def arithmetic(operation, *args):
     # empty list lines inherits line numbers of all number arguments
     lines = []
@@ -71,9 +72,18 @@ def rddArithmetic(operation, resilient):
     return final
 
 
-# run an operatoin functionally with no tainting. Use in tandem with arithemetic()
+# run an operation functionally with no tainting. Use in tandem with arithmetic()
+# NOTE: not working as expected. ignore for now
 def functionalOp(resilient, methodstr, *args):
-    method = getattr(resilient, methodstr)
+    # look for stamped values in rdd
+    if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
+        # print("LINES LIST: " + str(lines_list))
+        precursor = resilient.map(lambda x: (x.value))
+    else:
+        precursor = resilient
+    
+    # Apply line numbers from input RDD + caller line to output
+    method = getattr(precursor, methodstr)
     return method(*args)
 
 
@@ -96,7 +106,7 @@ def functionalOp(resilient, methodstr, *args):
 #
 # Method stub for solution after this method
 #
-def asymOp(resilient, methodstr, *args):
+def simpleAsymOp(resilient, methodstr, *args):
     lines_list = []
     
     # Get line number of caller
@@ -107,7 +117,7 @@ def asymOp(resilient, methodstr, *args):
     # look for stamped values in rdd
     if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
         lines_list = resilient.flatMap(lambda x: x.line_numbers).distinct().collect()
-        print("LINES LIST: " + str(lines_list))
+        # print("LINES LIST: " + str(lines_list))
         precursor = resilient.map(lambda x: (x.value))
     else:
         precursor = resilient
