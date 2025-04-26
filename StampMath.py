@@ -135,12 +135,14 @@ def simpleAsymOp(resilient, methodstr, *args):
     # 2. Group it
     # 3. Split it
     # 4. perform operation
-    # 5. stamp
+    # 5. re-stamp, but need to make sure correct lists go back where they belong. must also include caller line number
     # 6. recombine
 
 
+# def stampJoin(rdd1, rdd2, join):
 
-# Stamp everything in a vanilla RDD with the caller line number (use for SparkContext.textFile() and the like)
+
+# Stamp everything in a vanilla RDD with the caller line number ad hoc. Use when instantiating an RDD with parallelize, textFile, etc
 def stampRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
