@@ -1,3 +1,11 @@
+
+
+# TODO: toString() for StampedValues
+# TODO: use copy() to prevent issues with mutable state
+
+
+
+
 import operator
 import inspect
 
@@ -74,39 +82,19 @@ def rddArithmetic(operation, resilient):
 
 # run an operation functionally with no tainting. Use in tandem with arithmetic()
 # NOTE: not working as expected. ignore for now
-def functionalOp(resilient, methodstr, *args):
-    # look for stamped values in rdd
-    if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
-        # print("LINES LIST: " + str(lines_list))
-        precursor = resilient.map(lambda x: (x.value))
-    else:
-        precursor = resilient
+# def functionalOp(resilient, methodstr, *args):
+#     # look for stamped values in rdd
+#     if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
+#         # print("LINES LIST: " + str(lines_list))
+#         precursor = resilient.map(lambda x: (x.value))
+#     else:
+#         precursor = resilient
     
-    # Apply line numbers from input RDD + caller line to output
-    method = getattr(precursor, methodstr)
-    return method(*args)
+#     # Apply line numbers from input RDD + caller line to output
+#     method = getattr(precursor, methodstr)
+#     return method(*args)
 
-
-# IMPORTANT TODO:
-# This method can stamp asymmetric operations, but only if every single line number in the RDD should be included in all
-# tuples of the output.
-#
-# What if you had an RDD with data having these line numbers:
-#
-# (a,[1,3]) (a,[5,7]) (b,[9,11])
-#
-# And then you did some by-key operation?
-#
-# This function in its current state would not realize that the tuple resulting in the operation carried out on all tuples
-# having the key a shouldn't contain b's line numbers 9 & 11. It also doesn't realize that things resulting from b shouldn't
-# have line numbers associated with a.
-#
-# CORRECT OUTPUT (our goal): [(a+a,[1,3,5,7]), (b,[9,11])]
-# OUR OUTPUT (incorrect): [(a+a,[1,3,5,7,9,11]), (b,[1,3,5,7,9,11])]
-#
-# Method stub for solution after this method
-#
-def simpleAsymOp(resilient, methodstr, *args):
+def oneToMany(resilient, methodstr, *args):
     lines_list = []
     
     # Get line number of caller
@@ -129,23 +117,37 @@ def simpleAsymOp(resilient, methodstr, *args):
     return original.map(lambda x: (StampedValue(x, lines_list)))
 
 
+# map(lambda x: (x+1)), but they all come from different places
+# *args: arguments to map function
+# TODO: This is a better method handling maps that preserves RDD members' individual provenance.
+def stampMap(resilient, *args):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    
+    unwrapped = resilient.map(lambda x: (x.value, x.line_numbers + [line_num]))
+    processed = unwrapped.map(*args)
+    rewrapped = processed.map(lambda x: StampedValue(x[0], x[1]))
+
+    return rewrapped
+
+
 # Perform an operation by key. Only spread taint within keys.
 # def opByKey(resilient, methodstr, *args):
-    # 1. Unstamp input
-    # 2. Group it
-    # 3. Split it
-    # 4. perform operation
-    # 5. re-stamp, but need to make sure correct lists go back where they belong. must also include caller line number
-    # 6. recombine
+    # map stamped values in resilient to tuples. add caller line number here
+    # perform keyed operation. allow the operation itself to combine line numbers
+    # rewrap data into stamped values
 
 
 # def stampJoin(rdd1, rdd2, join):
 
 
 # Stamp everything in a vanilla RDD with the caller line number ad hoc. Use when instantiating an RDD with parallelize, textFile, etc
-def stampRDD(resilient):
+def stampNewRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
     
     return resilient.map(lambda x: StampedValue(x, [line_num]))
+
+
