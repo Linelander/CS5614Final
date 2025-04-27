@@ -17,7 +17,7 @@ class StampedValue:
 
 # Perform simple arithmetic with stamping outside of RDDs
 def arithmetic(operation, *args):
-    # empty list lines inherits line numbers of all number arguments
+    # [lines] inherits line numbers of all number arguments
     lines = []
     
     frame = inspect.currentframe()
@@ -46,38 +46,6 @@ def arithmetic(operation, *args):
     final = StampedValue(x, lines)
     return final
 
-
-
-def rddArithmetic(operation, resilient):
-    # empty list lines inherits line numbers of all number arguments
-    args = resilient.collect()
-    lines = []
-    
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back
-    line_num = caller_frame.f_lineno
-    
-    if type(args[0]) == StampedValue:
-        x = args[0].value
-        lines += [num for num in args[0].line_numbers]
-    else:
-        x = args[0]
-    
-    i = 1
-    while i < len(args):
-        if type(args[i]) == StampedValue:
-            x = operation(x, args[i].value)
-            lines += [num for num in args[i].line_numbers]
-        else:
-            x = operation(x, args[i])
-        i+=1
-    
-    # add the line number this function was called
-    lines += [line_num]
-
-    # Stamp x with [lines]
-    final = StampedValue(x, lines)
-    return final
 
 
 # run an operation functionally with no tainting. Use in tandem with arithmetic()
@@ -93,6 +61,9 @@ def rddArithmetic(operation, resilient):
 #     # Apply line numbers from input RDD + caller line to output
 #     method = getattr(precursor, methodstr)
 #     return method(*args)
+
+
+
 
 def oneToMany(resilient, methodstr, *args):
     lines_list = []
@@ -112,23 +83,20 @@ def oneToMany(resilient, methodstr, *args):
     
     # Apply line numbers from input RDD + caller line to output
     method = getattr(precursor, methodstr)
-    original = method(*args)
+    processed = method(*args)
     lines_list += [line_num]
-    return original.map(lambda x: (StampedValue(x, lines_list)))
+    return processed.map(lambda x: (StampedValue(x, lines_list)))
 
 
-# map(lambda x: (x+1)), but they all come from different places
-# *args: arguments to map function
-# TODO: This is a better method handling maps that preserves RDD members' individual provenance.
-def stampMap(resilient, *args):
+# NOTE: Meant for map and flatMap. Haven't checked out the others
+def oneToOne(resilient, methodstr, *args):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
-    
     unwrapped = resilient.map(lambda x: (x.value, x.line_numbers + [line_num]))
-    processed = unwrapped.map(*args)
+    method = getattr(unwrapped, methodstr)
+    processed = processed = method(*args)
     rewrapped = processed.map(lambda x: StampedValue(x[0], x[1]))
-
     return rewrapped
 
 
@@ -147,7 +115,4 @@ def stampNewRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
-    
     return resilient.map(lambda x: StampedValue(x, [line_num]))
-
-
