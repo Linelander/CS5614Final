@@ -21,7 +21,7 @@ words2 = StampMath.oneToOne(words, "map", lambda word: (word, 1, 77, 88))
 print("values from 2: " + str(words2.map(lambda x: (x.value)).collect()))
 print("lines from 2: " + str(words2.map(lambda x: (x.line_numbers)).collect()))
 
-counts = StampMath.manyToOne(words2, "reduceByKey", lambda x, y: x+y)
+counts = StampMath.???????(words2, "reduceByKey", lambda x, y: x+y)
 print("values final: " + str(counts.map(lambda x: (x.value)).collect()))
 print("lines final: " + str(counts.map(lambda x: (x.line_numbers)).collect()))
 
