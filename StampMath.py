@@ -24,6 +24,9 @@ class StampedValue:
         self.value = val
         self.line_numbers = line_num
 
+    def __repr__(self):
+        return f"${self.value}, {self.line_numbers}$"
+
 # Perform simple arithmetic with stamping outside of RDDs
 def arithmetic(operation, *args):
     # [lines] inherits line numbers of all number arguments
@@ -88,13 +91,47 @@ def oneToOne(resilient, methodstr, *args):
     # format: (([lines], 'key'), values, values, values, ...),
     method = getattr(unwrapped, methodstr)
     processed = method(*args)
-    print("COLLECT!!!!!!! " + str(line_num))
-    rewrapped = processed.map(lambda x: StampedValue((x[0][1], x[1:]), x[0][0]))
-    print(rewrapped.collect())
+    rewrapped = processed.map(lambda x: StampedValue((x[0][1], *(y for y in x[1:])), x[0][0]))
     return rewrapped
 
+def manyToMany(resilient, methodstr, *args):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
 
-# Stamp everything in a vanilla RDD with the caller line number ad hoc. Use when instantiating an RDD with parallelize, textFile, etc
+    unwrapped = resilient.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+
+    match methodstr:
+        case "reduceByKey":
+            user_function, = args
+            
+            def combine_lines(a, b):
+                value_a, line_no_a = a
+                value_b, line_no_b = b
+                return (user_function(value_a, value_b), list(sorted(set(line_no_a + line_no_b))))
+            reduced = unwrapped.reduceByKey(combine_lines)
+            stamped = reduced.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
+            return stamped
+        case "groupByKey":
+            grouped = unwrapped.groupByKey()
+        
+            def collapse(iterable):
+                datas = []
+                lines = []
+                for d, ls in iterable:
+                    datas.append(d)
+                    lines.extend(ls)
+                # for groupByKey, we collect all data into a list;
+                # if you wanted a different aggregate, swap this out.
+                return (datas, lines)
+            
+            processed = grouped.mapValues(collapse)
+            stamped = reduced.map(lambda x: (StampedValue((x[0], *(y for y in x[1:])), x[1][1])))
+            return stamped
+        case _:
+            print("Method currently not supported.")
+            exit(1)            
+
 def stampNewRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
