@@ -140,18 +140,19 @@ def stampNewRDD(resilient):
     return resilient.map(lambda x: StampedValue(x, [line_num]))
 
 
-# ---------------- THE GRAVEYARD ---------------- 
+# For when the user wants to join rdd1 with rdd2. They supply the join as a str
+def stampedJoin(rdd1, rdd2, joinStr):
+    # Get caller line number
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
 
-# run an operation functionally with no tainting. Use in tandem with arithmetic()
-# NOTE: not working as expected. ignore for now
-# def functionalOp(resilient, methodstr, *args):
-#     # look for stamped values in rdd
-#     if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
-#         # print("LINES LIST: " + str(lines_list))
-#         precursor = resilient.map(lambda x: (x.value))
-#     else:
-#         precursor = resilient
-    
-#     # Apply line numbers from input RDD + caller line to output
-#     method = getattr(precursor, methodstr)
-#     return method(*args)
+    # Unwrap RDDs of stamped values
+    unwrapped1 = rdd1.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+    unwrapped2 = rdd2.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+
+    # Get join attribute from rdd1
+    method = getattr(unwrapped1, joinStr)
+    joined = method(rdd2)
+    joinedRewrapped = joined.map(lambda x: StampedValue((x[0][1], *(y for y in x[1:])), x[0][0]))
+    return joinedRewrapped
