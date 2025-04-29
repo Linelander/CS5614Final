@@ -117,17 +117,18 @@ def manyToMany(resilient, methodstr, *args):
         
             def collapse(iterable):
                 datas = []
-                lines = []
+                lines = set()
                 for d, ls in iterable:
                     datas.append(d)
-                    lines.extend(ls)
+                    lines.update(ls)
                 # for groupByKey, we collect all data into a list;
                 # if you wanted a different aggregate, swap this out.
-                return (datas, lines)
+                return (datas, sorted(lines))
             
             processed = grouped.mapValues(collapse)
-            stamped = reduced.map(lambda x: (StampedValue((x[0], *(y for y in x[1:])), x[1][1])))
+            stamped = processed.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
             return stamped
+        
         case _:
             print("Method currently not supported.")
             exit(1)            

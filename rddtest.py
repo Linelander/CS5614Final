@@ -25,7 +25,7 @@ print("stage2:", str(words2.collect()))
 
 print("--------------------------")
 
-counts = StampMath.manyToMany(words2, "reduceByKey", lambda x, y: x*2*y)
+counts = StampMath.manyToMany(words2, "groupByKey", lambda x, y: x*2*y)
 print("stage3:", str(counts.collect()))
 
 
