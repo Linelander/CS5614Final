@@ -88,7 +88,7 @@ def oneToOne(resilient, methodstr, argF):
 
     # NOTE: deal with the stamped value directly (no unpacking required)
     def extendStamp(stamped):
-        result = argF(stamped.value)  # args[0] is the function passed to map or flatMap
+        result = argF(stamped.value)  # argF is user's mapping function
         new_lines = stamped.line_numbers + [line_num]
 
         if methodstr == "flatMap" and hasattr(result, "__iter__") and not isinstance(result, (str, bytes)):
