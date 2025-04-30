@@ -114,7 +114,7 @@ def manyToMany(resilient, methodstr, *args):
             return stamped
         case "groupByKey":
             grouped = unwrapped.groupByKey()
-        
+            
             def collapse(iterable):
                 datas = []
                 lines = set()

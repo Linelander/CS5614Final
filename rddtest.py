@@ -25,9 +25,59 @@ print("stage2:", str(words2.collect()))
 
 print("--------------------------")
 
-counts = StampMath.manyToMany(words2, "groupByKey", lambda x, y: x*2*y)
+counts = StampMath.manyToMany(words2, "groupByKey")
 print("stage3:", str(counts.collect()))
 
+
+
+
+
+
+print("-------- NORMAL --------")
+
+text = sc.textFile("./data/words.txt")
+words = text.flatMap(lambda line: line.split(" "))
+print("stage1:", str(words.collect()))
+
+print("--------------------------")
+
+words2 = words.map(lambda word: (word, 2))
+print("stage2:", str(words2.collect()))
+
+print("--------------------------")
+
+counts = words2.groupByKey()
+print("stage3:", str(counts.collect()))
+
+
+
+
+
+
+
+
+
+
+
+
+
+print("--------------- REGULAR TEST 2 --------------")
+rdd = sc.parallelize([('dog', 1), ('cat', 1), ('dog', 1)])
+grouped = rdd.groupByKey()
+print("SEMIFINAL")
+print(grouped.collect())
+print("FINAL")
+result = print(grouped.map(lambda kv: (kv[0], len(kv[1]))).collect())
+# Output: [('dog', 2), ('cat', 1)]
+
+print("--------------- MODDED TEST 3 --------------")
+rdd2 = StampMath.stampNewRDD(sc.parallelize([('dog', 1), ('cat', 1), ('dog', 1)]))
+grouped2 = StampMath.manyToMany(rdd2, "groupByKey")
+print("SEMIFINAL")
+print(grouped2.collect())
+result2 = print(StampMath.oneToOne(grouped2, "map", lambda kv: (kv[0], len(kv[1]))))
+print("FINAL")
+result2.collect()
 
 # --- Harder test: single RDDs containing data from different places ---
 # JOIN TEST
