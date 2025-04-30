@@ -81,18 +81,23 @@ def oneToMany(resilient, methodstr, *args):
     lines_list += [line_num]
     return processed.map(lambda x: (StampedValue(x, lines_list)))
 
-# NOTE: Meant for map and flatMap. Haven't checked out the others
-def oneToOne(resilient, methodstr, *args):
+def oneToOne(resilient, methodstr, argF):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
 
-    unwrapped = resilient.map(lambda x: (x.line_numbers + [line_num], x.value))
-    # format: (([lines], 'key'), values, values, values, ...),
-    method = getattr(unwrapped, methodstr)
-    processed = method(*args)
-    rewrapped = processed.map(lambda x: StampedValue((x[0][1], *(y for y in x[1:])), x[0][0]))
-    return rewrapped
+    # NOTE: deal with the stamped value directly (no unpacking required)
+    def extendStamp(stamped):
+        result = argF(stamped.value)  # args[0] is the function passed to map or flatMap
+        new_lines = stamped.line_numbers + [line_num]
+
+        if methodstr == "flatMap" and hasattr(result, "__iter__") and not isinstance(result, (str, bytes)):
+            return [StampedValue(value, new_lines) for value in result]
+        else:
+            return StampedValue(result, new_lines)
+
+    # call extendStamp on everything in the RDD
+    return resilient.map(extendStamp) if methodstr != "flatMap" else resilient.flatMap(extendStamp)
 
 def manyToMany(resilient, methodstr, *args):
     frame = inspect.currentframe()
