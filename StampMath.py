@@ -158,6 +158,6 @@ def stampedJoin(rdd1, rdd2, joinStr):
 
     # Get join attribute from rdd1
     method = getattr(unwrapped1, joinStr)
-    joined = method(rdd2)
-    joinedRewrapped = joined.map(lambda x: StampedValue((x[0][1], *(y for y in x[1:])), x[0][0]))
+    joined = method(unwrapped2)
+    joinedRewrapped = joined.map(lambda x: StampedValue((x[0][0], x[1][0]), x[1][1]))
     return joinedRewrapped
