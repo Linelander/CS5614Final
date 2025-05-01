@@ -171,18 +171,39 @@ def stampNewRDD(resilient):
 
 
 # For when the user wants to join rdd1 with rdd2. They supply the join as a str
-def stampedJoin(rdd1, rdd2, joinStr):
-    # Get caller line number
+import inspect
+
+# NOTE: Handles joins and cartesian
+def stampedMeld(rdd1, rdd2, methodStr):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
 
-    # Unwrap RDDs of stamped values
-    unwrapped1 = rdd1.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
-    unwrapped2 = rdd2.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+    def stampedExtract(stamped):
+        value = stamped.value
+        return (value[0], (value[1], stamped.line_numbers + [line_num]))
 
-    # Get join attribute from rdd1
-    method = getattr(unwrapped1, joinStr)
-    joined = method(unwrapped2)
-    joinedRewrapped = joined.map(lambda x: StampedValue((x[0][0], x[1][0]), x[1][1]))
-    return joinedRewrapped
+    def wrap(pair):
+        key, ((value1, lines1), (value2, lines2)) = pair
+        accrued_values = (key, value1, value2)
+        accrued_lines = sorted(set(lines1 + lines2))
+        return StampedValue(accrued_values, accrued_lines)
+
+    if methodStr == "cartesian":
+        unwrapped1 = rdd1.map(lambda x: (x.value, x.line_numbers + [line_num]))
+        unwrapped2 = rdd2.map(lambda x: (x.value, x.line_numbers + [line_num]))
+
+        cartesian = unwrapped1.cartesian(unwrapped2)
+
+        return cartesian.map(lambda x: 
+            StampedValue((x[0][0], x[1][0]), sorted(set(x[0][1] + x[1][1])))
+        )
+
+    else:
+        unwrapped1 = rdd1.map(stampedExtract)
+        unwrapped2 = rdd2.map(stampedExtract)
+
+        method = getattr(unwrapped1, methodStr)
+        joined = method(unwrapped2)
+
+        return joined.map(wrap)
