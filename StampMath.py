@@ -137,7 +137,31 @@ def manyToMany(resilient, methodstr, *args):
         
         case _:
             print("Method currently not supported.")
-            exit(1)            
+            exit(1)         
+
+
+# NOTE: User passes the sort they want + args
+def stampSort(resilient, methodStr, *args, **kwargs):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+
+    unwrapped = resilient.map(lambda x: (x.value, x.line_numbers+[line_num])) # line numbers held at the end
+    # format ((original), lines)
+
+    method = getattr(unwrapped, methodStr)
+
+    processed = method(*args, **kwargs)
+
+    # rewrap
+    rewrapped = processed.map(lambda x : (x[0], x[1])) # line numbers held at the end
+
+    return rewrapped
+
+
+
+
+
 
 def stampNewRDD(resilient):
     frame = inspect.currentframe()
