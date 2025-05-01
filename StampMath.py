@@ -81,7 +81,8 @@ def oneToMany(resilient, methodstr, *args):
     lines_list += [line_num]
     return processed.map(lambda x: (StampedValue(x, lines_list)))
 
-def oneToOne(resilient, methodstr, argF):
+# NOTE: supports map and flatmap
+def stampMap(resilient, methodstr, argF):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
