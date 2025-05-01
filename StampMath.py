@@ -92,7 +92,7 @@ def stampMap(resilient, methodstr, argF):
         result = argF(stamped.value)  # argF is user's mapping function
         new_lines = stamped.line_numbers + [line_num]
 
-        if methodstr == "flatMap" and hasattr(result, "__iter__"): # don't cut up strings, etc
+        if methodstr == "flatMap": # don't cut up strings, etc
             return [StampedValue(value, new_lines) for value in result]
         else:
             return StampedValue(result, new_lines)
