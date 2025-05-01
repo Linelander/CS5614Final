@@ -183,13 +183,20 @@ def stampedMeld(rdd1, rdd2, methodStr):
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
 
-    def stampedExtract(stamped):
-        value = stamped.value
-        return (value[0], (value[1], stamped.line_numbers + [line_num]))
-
     def wrap(pair):
-        key, ((value1, lines1), (value2, lines2)) = pair
-        accrued_values = (key, value1, value2)
+        # print("pair key: " + str(pair[0]))
+        # print("pair value: " + str(pair[1]))
+        key, values = pair
+
+        # Handle None values from outer joins
+        left = values[0] if values[0] is not None else (None, [])
+        right = values[1] if values[1] is not None else (None, [])
+
+        value1, lines1 = left
+        value2, lines2 = right
+
+        # Connor NOTE: I'm tupling value1 and value2 to match vanilla pyspark
+        accrued_values = (key, (value1, value2))
         accrued_lines = sorted(set(lines1 + lines2))
         return StampedValue(accrued_values, accrued_lines)
 
@@ -204,8 +211,8 @@ def stampedMeld(rdd1, rdd2, methodStr):
         )
 
     else:
-        unwrapped1 = rdd1.map(stampedExtract)
-        unwrapped2 = rdd2.map(stampedExtract)
+        unwrapped1 = rdd1.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+        unwrapped2 = rdd2.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
 
         method = getattr(unwrapped1, methodStr)
         joined = method(unwrapped2)

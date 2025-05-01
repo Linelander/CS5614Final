@@ -71,3 +71,25 @@ union5 = one5.union(two5)
 print(union5.collect())
 
 print()
+
+print("-------------- Join2 MODDED --------------")
+one6 = StampMath.stampNewRDD(sc.parallelize(['a']).map(lambda x: (x, 1)))
+two6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
+three6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
+
+joined6 = StampMath.stampedMeld(one6, two6, "fullOuterJoin")
+joined6_2 = StampMath.stampedMeld(joined6, three6, "join")
+
+print(joined6_2.collect())
+
+print()
+
+print("-------------- Join2 REGULAR --------------")
+one7 = sc.parallelize(['a']).map(lambda x: (x, 1))
+two7 = sc.parallelize(['b', 'a']).map(lambda x: (x, 1))
+three7 = sc.parallelize(['b', 'a']).map(lambda x: (x, 1))
+
+joined7 = one7.fullOuterJoin(two7)
+joined7_2 = joined7.join(three7)
+
+print(joined7_2.collect())
