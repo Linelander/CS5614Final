@@ -189,6 +189,8 @@ def stampedMeld(rdd1, rdd2, methodStr):
         key, values = pair
 
         # Handle None values from outer joins
+        # left is at [0], right is at [1]
+        # use this function after pyspark takes care of the join (chosen by user)
         left = values[0] if values[0] is not None else (None, [])
         right = values[1] if values[1] is not None else (None, [])
 
@@ -196,6 +198,7 @@ def stampedMeld(rdd1, rdd2, methodStr):
         value2, lines2 = right
 
         # Connor NOTE: I'm tupling value1 and value2 to match vanilla pyspark
+        # lay them out the same way pyspark does normally (key off to the side, left and right val tupled together)
         accrued_values = (key, (value1, value2))
         accrued_lines = sorted(set(lines1 + lines2))
         return StampedValue(accrued_values, accrued_lines)
