@@ -159,10 +159,6 @@ def stampSort(resilient, methodStr, *args, **kwargs):
     return rewrapped
 
 
-
-
-
-
 def stampNewRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
@@ -170,8 +166,16 @@ def stampNewRDD(resilient):
     return resilient.map(lambda x: StampedValue(x, [line_num]))
 
 
+# NOTE: Add the current line number to all StampedValues in RDD resilient
+def adHocStamp(resilient):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    
+    return resilient.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
+
+
 # For when the user wants to join rdd1 with rdd2. They supply the join as a str
-import inspect
 
 # NOTE: Handles joins and cartesian
 def stampedMeld(rdd1, rdd2, methodStr):
