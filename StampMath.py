@@ -93,7 +93,7 @@ def stampMap(resilient, methodstr, argF):
         new_lines = stamped.line_numbers + [line_num]
 
         if methodstr == "flatMap": # don't cut up strings, etc
-            return [StampedValue(value, new_lines) for value in result]
+            return [StampedValue(value, new_lines) for value in result] # flatmap returns a list of stamped values (chops strings)
         else:
             return StampedValue(result, new_lines)
 
