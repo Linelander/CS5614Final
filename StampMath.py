@@ -184,23 +184,28 @@ def stampedMeld(rdd1, rdd2, methodStr):
     line_num = caller_frame.f_lineno
 
     def wrap(pair):
-        # print("pair key: " + str(pair[0]))
-        # print("pair value: " + str(pair[1]))
+        # NOTE debug
+        print("pair key: " + str(pair[0]))
+        print("pair value: " + str(pair[1]))
         key, values = pair
+
+        # values contains the two things that were joined on the same key
 
         # Handle None values from outer joins
         # left is at [0], right is at [1]
         # use this function after pyspark takes care of the join (chosen by user)
+
+
         left = values[0] if values[0] is not None else (None, [])
         right = values[1] if values[1] is not None else (None, [])
 
-        value1, lines1 = left
-        value2, lines2 = right
+        value_left, lines_left = left
+        value_right, lines_right = right
 
-        # Connor NOTE: I'm tupling value1 and value2 to match vanilla pyspark
+        # Connor NOTE: I'm tupling valueLeft and value_right to match vanilla pyspark
         # lay them out the same way pyspark does normally (key off to the side, left and right val tupled together)
-        accrued_values = (key, (value1, value2))
-        accrued_lines = sorted(set(lines1 + lines2))
+        accrued_values = (key, (value_left, value_right))
+        accrued_lines = sorted(set(lines_left + lines_right))
         return StampedValue(accrued_values, accrued_lines)
 
     if methodStr == "cartesian":
@@ -223,6 +228,7 @@ def stampedMeld(rdd1, rdd2, methodStr):
         return joined.map(wrap)
 
 
+# Very simple parser for union
 def stampedUnion(rdd1, rdd2):
     frame = inspect.currentframe()
     caller_frame = frame.f_back

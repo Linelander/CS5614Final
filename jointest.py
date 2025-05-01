@@ -74,7 +74,7 @@ print()
 
 print("-------------- Join2 MODDED --------------")
 one6 = StampMath.stampNewRDD(sc.parallelize(['a']).map(lambda x: (x, 1)))
-two6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
+two6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a', 'c']).map(lambda x: (x, 1)))
 three6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
 
 joined6 = StampMath.stampedMeld(one6, two6, "fullOuterJoin")
@@ -86,7 +86,7 @@ print()
 
 print("-------------- Join2 REGULAR --------------")
 one7 = sc.parallelize(['a']).map(lambda x: (x, 1))
-two7 = sc.parallelize(['b', 'a']).map(lambda x: (x, 1))
+two7 = sc.parallelize(['b', 'a', 'c']).map(lambda x: (x, 1))
 three7 = sc.parallelize(['b', 'a']).map(lambda x: (x, 1))
 
 joined7 = one7.fullOuterJoin(two7)
