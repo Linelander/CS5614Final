@@ -111,11 +111,11 @@ def manyToMany(resilient, methodstr, *args):
         case "reduceByKey":
             user_function, = args
             
-            def combine_lines(a, b):
+            def combineLines(a, b):
                 value_a, line_no_a = a
                 value_b, line_no_b = b
                 return (user_function(value_a, value_b), list(sorted(set(line_no_a + line_no_b))))
-            reduced = unwrapped.reduceByKey(combine_lines)
+            reduced = unwrapped.reduceByKey(combineLines)
             stamped = reduced.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
             return stamped
         case "groupByKey":
@@ -159,6 +159,7 @@ def stampSort(resilient, methodStr, *args, **kwargs):
     return rewrapped
 
 
+# NOTE: turns newly created vanilla RDDs into RDDs of stamped values. Use inline with parallelize, textFile, etc.
 def stampNewRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
@@ -175,7 +176,6 @@ def adHocStamp(resilient):
     return resilient.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
 
 
-# For when the user wants to join rdd1 with rdd2. They supply the join as a str
 
 # NOTE: Handles joins and cartesian
 def stampedMeld(rdd1, rdd2, methodStr):
@@ -211,3 +211,11 @@ def stampedMeld(rdd1, rdd2, methodStr):
         joined = method(unwrapped2)
 
         return joined.map(wrap)
+
+
+def stampedUnion(rdd1, rdd2):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    unioned = rdd1.union(rdd2)
+    return unioned.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
