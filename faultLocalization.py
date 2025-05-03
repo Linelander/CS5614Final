@@ -58,7 +58,8 @@ def computeSuspiciousness(codeLines, dataResults):
     lineFailCoverage = [0] * totalLineNumber
 
     # Tally coverage
-    for t in testDataResults:
+    # for t in testDataResults:
+    for t in dataResults:
         if t['test_pass']:
             for ln in t['lines_visited']:
                 linePassCoverage[ln] += 1

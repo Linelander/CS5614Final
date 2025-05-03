@@ -1,0 +1,28 @@
+stage1: [$Test, [17, 18]$, $blue, [17, 18]$, $red, [17, 18]$, $red, [17, 18]$, $green, [17, 18]$, $test, [17, 18]$, $test, [17, 18]$, $same, [17, 18]$, $tree, [17, 18]$, $clean, [17, 18]$]
+--------------------------
+stage2: [$('Test', 1), [17, 18, 23]$, $('blue', 1), [17, 18, 23]$, $('red', 1), [17, 18, 23]$, $('red', 1), [17, 18, 23]$, $('green', 1), [17, 18, 23]$, $('test', 1), [17, 18, 23]$, $('test', 1), [17, 18, 23]$, $('same', 1), [17, 18, 23]$, $('tree', 1), [17, 18, 23]$, $('clean', 1), [17, 18, 23]$]
+--------------------------
+stage2.5: [$('blue', 1), [17, 18, 23, 28]$, $('red', 2), [17, 18, 23, 28]$, $('green', 1), [17, 18, 23, 28]$, $('tree', 1), [17, 18, 23, 28]$, $('clean', 1), [17, 18, 23, 28]$, $('Test', 1), [17, 18, 23, 28]$, $('test', 2), [17, 18, 23, 28]$, $('same', 1), [17, 18, 23, 28]$]
+--------------------------
+stage3: [$('blue', [1]), [17, 18, 23, 28, 33]$, $('red', [2]), [17, 18, 23, 28, 33]$, $('green', [1]), [17, 18, 23, 28, 33]$, $('tree', [1]), [17, 18, 23, 28, 33]$, $('clean', [1]), [17, 18, 23, 28, 33]$, $('Test', [1]), [17, 18, 23, 28, 33]$, $('test', [2]), [17, 18, 23, 28, 33]$, $('same', [1]), [17, 18, 23, 28, 33]$]
+
+-------- NORMAL --------
+stage1: ['Test', 'blue', 'red', 'red', 'green', 'test', 'test', 'same', 'tree', 'clean']
+--------------------------
+stage2: [('Test', 2), ('blue', 2), ('red', 2), ('red', 2), ('green', 2), ('test', 2), ('test', 2), ('same', 2), ('tree', 2), ('clean', 2)]
+--------------------------
+stage3: [('blue', <pyspark.resultiterable.ResultIterable object at 0x1016eda90>), ('red', <pyspark.resultiterable.ResultIterable object at 0x101715d10>), ('green', <pyspark.resultiterable.ResultIterable object at 0x101716e90>), ('tree', <pyspark.resultiterable.ResultIterable object at 0x10179cc30>), ('clean', <pyspark.resultiterable.ResultIterable object at 0x10179cd60>), ('Test', <pyspark.resultiterable.ResultIterable object at 0x1016bf770>), ('test', <pyspark.resultiterable.ResultIterable object at 0x1016fe8b0>), ('same', <pyspark.resultiterable.ResultIterable object at 0x1016fe9c0>)]
+
+--------------- REGULAR TEST 2 --------------
+SEMIFINAL
+/Users/aaronho/Documents/GitHub/CS5614Final-main/venv/lib/python3.13/site-packages/pyspark/python/lib/pyspark.zip/pyspark/shuffle.py:65: UserWarning: Please install psutil to have better support with spilling
+/Users/aaronho/Documents/GitHub/CS5614Final-main/venv/lib/python3.13/site-packages/pyspark/python/lib/pyspark.zip/pyspark/shuffle.py:65: UserWarning: Please install psutil to have better support with spilling
+[('dog', <pyspark.resultiterable.ResultIterable object at 0x1016faf50>), ('cat', <pyspark.resultiterable.ResultIterable object at 0x1016fa250>)]
+FINAL
+[('dog', 2), ('cat', 1)]
+
+--------------- MODDED TEST 3 --------------
+SEMIFINAL
+[$('dog', [1, 1]), [81, 82]$, $('cat', [1]), [81, 82]$]
+FINAL
+[$('dog', 2), [81, 82, 85]$, $('cat', 1), [81, 82, 85]$]
