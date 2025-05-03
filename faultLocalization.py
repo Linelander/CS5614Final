@@ -136,45 +136,48 @@ def printSuspiciousnessScores(codeLines: list[str], dataResults: list[dict[str, 
     print(f"Most suspicious by Kulczynski:   line(s) {', '.join(map(str, computeMostSuspiciousLine(kulczynski)))}")
 
 
-#sample code lines, in the actual code, these would be based on the code being tested
-code_lines = [
-    "int m;",
-    "m = z;",
-    "if (y < z):",
-    "if (x < y):",
-    "m = y;",
-    "elif (x < z):",
-    "m = y; #error",
-    "else:",
-    "if (x > y):",
-    "m = y;",
-    "elif (x > z):",
-    "m = x;",
-    "return m;"
-]
 
-# --------------------------------------------------------------------------
-# Sample run based on the slides:
-# --------------------------------------------------------------------------
-#Empty list that will be filled up with the necessary input data
-testDataResults = []
 
-recordTestExecution(testDataResults, [0,1,2,3,5,6,12], True)
-recordTestExecution(testDataResults, [0,1,2,3,4,12], True)
-recordTestExecution(testDataResults, [0,1,2,7,8,9,12], True)
-recordTestExecution(testDataResults, [0,1,2,7,8,10,12], True)
-recordTestExecution(testDataResults, [0,1,2,3,5,12], True)
-recordTestExecution(testDataResults, [0,1,2,3,5,6,12], False)
+if __name__ == '__main__':
+    #sample code lines, in the actual code, these would be based on the code being tested
+    code_lines = [
+        "int m;",
+        "m = z;",
+        "if (y < z):",
+        "if (x < y):",
+        "m = y;",
+        "elif (x < z):",
+        "m = y; #error",
+        "else:",
+        "if (x > y):",
+        "m = y;",
+        "elif (x > z):",
+        "m = x;",
+        "return m;"
+    ]
 
-"""
-code_lines: The visual lines of code that are being tested as a list of lines in order.
-testDataResults: The results of the test executions, including which lines were visited and whether the test passed or failed.
-                        Fill in using recordTestExecution() helper function.
+    # --------------------------------------------------------------------------
+    # Sample run based on the slides:
+    # --------------------------------------------------------------------------
+    #Empty list that will be filled up with the necessary input data
+    testDataResults = []
 
-testDataResults Format:
-{
-  'lines_visited': [...],
-  'test_pass': bool
-}
-"""
-printSuspiciousnessScores(code_lines, testDataResults)
+    recordTestExecution(testDataResults, [0,1,2,3,5,6,12], True)
+    recordTestExecution(testDataResults, [0,1,2,3,4,12], True)
+    recordTestExecution(testDataResults, [0,1,2,7,8,9,12], True)
+    recordTestExecution(testDataResults, [0,1,2,7,8,10,12], True)
+    recordTestExecution(testDataResults, [0,1,2,3,5,12], True)
+    recordTestExecution(testDataResults, [0,1,2,3,5,6,12], False)
+
+    """
+    code_lines: The visual lines of code that are being tested as a list of lines in order.
+    testDataResults: The results of the test executions, including which lines were visited and whether the test passed or failed.
+                            Fill in using recordTestExecution() helper function.
+
+    testDataResults Format:
+    {
+    'lines_visited': [...],
+    'test_pass': bool
+    }
+    """
+    printSuspiciousnessScores(code_lines, testDataResults)

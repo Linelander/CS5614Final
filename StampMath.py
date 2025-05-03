@@ -1,13 +1,35 @@
 import operator
 import inspect
 
-class StampedValue:
-    def __init__(self, val):
-        self.value = val
-        self.line_numbers = []
 
+# TODO: toString() for StampedValues
+# TODO: use copy() to prevent issues with mutable state
+
+
+# TODO: Perform an operation by key. Only spread taint within keys. Needs to work
+# def manyToOne(resilient, methodstr, *args):
+    # map stamped values in resilient to tuples. add caller line number here
+    # perform keyed operation. allow the operation itself to combine line numbers
+    # rewrap data into stamped values
+
+# TODO: Maybe this is a better approach? for things like reduce by key
+# def keyedOp(resilient, methodstr, *args):
+
+# def stampJoin(rdd1, rdd2, join):
+
+
+# Will hold an RDD and relevant line numbers
+class StampedValue:
+    def __init__(self, val, line_num):
+        self.value = val
+        self.line_numbers = line_num
+
+    def __repr__(self):
+        return f"${self.value}, {self.line_numbers}$"
+
+# Perform simple arithmetic with stamping outside of RDDs
 def arithmetic(operation, *args):
-    # empty list lines inherits line numbers of all number arguments
+    # [lines] inherits line numbers of all number arguments
     lines = []
     
     frame = inspect.currentframe()
@@ -33,22 +55,183 @@ def arithmetic(operation, *args):
     lines += [line_num]
 
     # Stamp x with [lines]
-    final = StampedValue(x)
-    final.line_numbers = lines
+    final = StampedValue(x, lines)
     return final
 
-# def getWordCount(line_numbers):
-#     total_word_count = 0
-#     for line_number in line_numbers:
-#         print('line number:', line_number)
-#         total_word_count += readFileLineWordCount('ArithmeticTest.py', line_number)
 
-#     return total_word_count
+def oneToMany(resilient, methodstr, *args):
+    lines_list = []
+    
+    # Get line number of caller
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
 
-# def readFileLineWordCount(filepath, line_number):
-#     with open(filepath, 'r') as file:
-#         lines = file.readlines()
+    # look for stamped values in rdd
+    if not resilient.filter(lambda x: isinstance(x, StampedValue)).isEmpty():
+        lines_list = resilient.flatMap(lambda x: x.line_numbers).distinct().collect()
+        # print("LINES LIST: " + str(lines_list))
+        precursor = resilient.map(lambda x: (x.value))
+    else:
+        precursor = resilient
+    
+    # Apply line numbers from input RDD + caller line to output
+    method = getattr(precursor, methodstr)
+    processed = method(*args)
+    lines_list += [line_num]
+    return processed.map(lambda x: (StampedValue(x, lines_list)))
 
-#     word_count = len(lines[line_number - 1].split())
-#     print(lines[line_number - 1].split(), '| length:', word_count)
-#     return word_count
+# NOTE: supports map and flatmap
+def stampMap(resilient, methodstr, argF):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+
+    # NOTE: deal with the stamped value directly (no unpacking required)
+    def extendStamp(stamped):
+        result = argF(stamped.value)  # argF is user's mapping function
+        new_lines = stamped.line_numbers + [line_num]
+
+        if methodstr == "flatMap": # don't cut up strings, etc
+            return [StampedValue(value, new_lines) for value in result] # flatmap returns a list of stamped values (chops strings)
+        else:
+            return StampedValue(result, new_lines)
+
+    # call extendStamp on everything in the RDD
+    return resilient.map(extendStamp) if methodstr != "flatMap" else resilient.flatMap(extendStamp)
+
+def manyToMany(resilient, methodstr, *args):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+
+    unwrapped = resilient.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+
+    match methodstr:
+        case "reduceByKey":
+            user_function, = args
+            
+            def combineLines(a, b):
+                value_a, line_no_a = a
+                value_b, line_no_b = b
+                return (user_function(value_a, value_b), list(sorted(set(line_no_a + line_no_b))))
+            reduced = unwrapped.reduceByKey(combineLines)
+            stamped = reduced.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
+            return stamped
+        case "groupByKey":
+            grouped = unwrapped.groupByKey()
+            
+            def collapse(iterable):
+                datas = []
+                lines = set()
+                for d, ls in iterable:
+                    datas.append(d)
+                    lines.update(ls)
+                # for groupByKey, we collect all data into a list;
+                # if you wanted a different aggregate, swap this out.
+                return (datas, sorted(lines))
+            
+            processed = grouped.mapValues(collapse)
+            stamped = processed.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
+            return stamped
+        
+        case _:
+            print("Method currently not supported.")
+            exit(1)         
+
+
+# NOTE: User passes the sort they want + args
+def stampSort(resilient, methodStr, *args, **kwargs):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+
+    unwrapped = resilient.map(lambda x: (x.value, x.line_numbers+[line_num])) # line numbers held at the end
+    # format ((original), lines)
+
+    method = getattr(unwrapped, methodStr)
+
+    processed = method(*args, **kwargs)
+
+    # rewrap
+    rewrapped = processed.map(lambda x : (x[0], x[1])) # line numbers held at the end
+
+    return rewrapped
+
+
+# NOTE: turns newly created vanilla RDDs into RDDs of stamped values. Use inline with parallelize, textFile, etc.
+def stampNewRDD(resilient):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    return resilient.map(lambda x: StampedValue(x, [line_num]))
+
+
+# NOTE: Add the current line number to all StampedValues in RDD resilient
+def adHocStamp(resilient):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    
+    return resilient.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
+
+
+
+# NOTE: Handles joins and cartesian
+def stampedMeld(rdd1, rdd2, methodStr):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+
+    def wrap(pair):
+        # NOTE debug
+        print("pair key: " + str(pair[0]))
+        print("pair value: " + str(pair[1]))
+        key, values = pair
+
+        # values contains the two things that were joined on the same key
+
+        # Handle None values from outer joins
+        # left is at [0], right is at [1]
+        # use this function after pyspark takes care of the join (chosen by user)
+
+
+        left = values[0] if values[0] is not None else (None, [])
+        right = values[1] if values[1] is not None else (None, [])
+
+        value_left, lines_left = left
+        value_right, lines_right = right
+
+        # Connor NOTE: I'm tupling valueLeft and value_right to match vanilla pyspark
+        # lay them out the same way pyspark does normally (key off to the side, left and right val tupled together)
+        accrued_values = (key, (value_left, value_right))
+        accrued_lines = sorted(set(lines_left + lines_right))
+        return StampedValue(accrued_values, accrued_lines)
+
+    if methodStr == "cartesian":
+        unwrapped1 = rdd1.map(lambda x: (x.value, x.line_numbers + [line_num]))
+        unwrapped2 = rdd2.map(lambda x: (x.value, x.line_numbers + [line_num]))
+
+        cartesian = unwrapped1.cartesian(unwrapped2)
+
+        return cartesian.map(lambda x: 
+            StampedValue((x[0][0], x[1][0]), sorted(set(x[0][1] + x[1][1])))
+        )
+
+    else:
+        unwrapped1 = rdd1.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+        unwrapped2 = rdd2.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
+
+        method = getattr(unwrapped1, methodStr)
+        joined = method(unwrapped2)
+
+        return joined.map(wrap)
+
+
+# Very simple parser for union
+def stampedUnion(rdd1, rdd2):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    unioned = rdd1.union(rdd2)
+    return unioned.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
