@@ -8,10 +8,12 @@ import math
 def recordTestExecution(dataResults: list[dict[str, bool]], lines_visited: list[str], test_pass: bool):
     """
     Lines visited is a list of line indices that were covered by the test
-    (line indices start at 0), and test_pass is True/False.
+    (line indices start at 1), and test_pass is True/False.
     """
+    adjusted_lines = [int(line) -1 for line in lines_visited]
+
     dataResults.append({
-        'lines_visited': lines_visited,
+        'lines_visited': adjusted_lines,
         'test_pass': test_pass
     })
 

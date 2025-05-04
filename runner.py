@@ -15,10 +15,10 @@ line_number_list = [list(map(int, match.split(','))) for match in matches]
 
 # getting suspicious line numbers
 testDataResults = []
-faulty_lines = {104} # can change this to any line number(s)
+fault_lines = {116} # can change this to any line number(s)
 
-for i, line_list in enumerate(line_number_list):
-    passed = not any(line in faulty_lines for line in line_list)
+for line_list in line_number_list:
+    passed = not any(line in fault_lines for line in line_list)
     recordTestExecution(testDataResults, line_list, passed)
 
 
