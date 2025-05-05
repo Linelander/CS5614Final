@@ -58,7 +58,6 @@ def arithmetic(operation, *args):
     final = StampedValue(x, lines)
     return final
 
-
 def oneToMany(resilient, methodstr, *args):
     lines_list = []
     
@@ -99,6 +98,21 @@ def stampMap(resilient, methodstr, argF):
 
     # call extendStamp on everything in the RDD
     return resilient.map(extendStamp) if methodstr != "flatMap" else resilient.flatMap(extendStamp)
+
+def stampFilter(resilient, argF):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+
+    def evaluate(val):
+        if argF(val.value):
+            return StampedValue(val.value, val.line_numbers + [line_num])
+        else:
+            return
+        
+    rewrapped = resilient.map(evaluate).filter(lambda x: x is not None)
+    return rewrapped
+    
 
 def manyToMany(resilient, methodstr, *args):
     import inspect
@@ -193,8 +207,6 @@ def adHocStamp(resilient):
     line_num = caller_frame.f_lineno
     
     return resilient.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
-
-
 
 # NOTE: Handles joins and cartesian
 def stampedMeld(rdd1, rdd2, methodStr):
