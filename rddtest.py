@@ -87,6 +87,8 @@ print("FINAL")
 print(result2.collect())
 
 
+print("----------- MANY-TO-MANY TEST, AGGREGATE FOLD AND COMBINE ----------")
+rdd_many1 = StampMath.manyToMany
 
 
 print("----------- REGULAR FLATMAP TEST ----------")

@@ -101,6 +101,7 @@ def stampMap(resilient, methodstr, argF):
     return resilient.map(extendStamp) if methodstr != "flatMap" else resilient.flatMap(extendStamp)
 
 def manyToMany(resilient, methodstr, *args):
+    import inspect
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
@@ -108,36 +109,54 @@ def manyToMany(resilient, methodstr, *args):
     unwrapped = resilient.map(lambda x: (x.value[0], (x.value[1], x.line_numbers + [line_num])))
 
     match methodstr:
+        # RDD.reduceByKey(func: Callable[[V, V], V], numPartitions: Optional[int] = None, 
+        # partitionFunc: Callable[[K], int] = <function portable_hash>) → pyspark.rdd.RDD[Tuple[K, V]][source]
         case "reduceByKey":
             user_function, = args
-            
-            def combineLines(a, b):
-                value_a, line_no_a = a
-                value_b, line_no_b = b
-                return (user_function(value_a, value_b), list(sorted(set(line_no_a + line_no_b))))
-            reduced = unwrapped.reduceByKey(combineLines)
-            stamped = reduced.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
-            return stamped
-        case "groupByKey":
-            grouped = unwrapped.groupByKey()
-            
-            def collapse(iterable):
-                datas = []
-                lines = set()
-                for d, ls in iterable:
-                    datas.append(d)
-                    lines.update(ls)
-                # for groupByKey, we collect all data into a list;
-                # if you wanted a different aggregate, swap this out.
-                return (datas, sorted(lines))
-            
-            processed = grouped.mapValues(collapse)
-            stamped = processed.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
-            return stamped
+            args = [lambda a, b: (user_function(a[0], b[0]), sorted(set(a[1] + b[1])))]
+
+        # RDD.aggregateByKey(zeroValue: U, seqFunc: Callable[[U, V], U], combFunc: Callable[[U, U], U], 
+        # numPartitions: Optional[int] = None, partitionFunc: Callable[[K], int] = <function portable_hash>) → pyspark.rdd.RDD[Tuple[K, U]]
+        case "aggregateByKey":
+            zeroValue, seqFunc, combFunc = args
+            args = [(zeroValue, []), lambda acc, val: (seqFunc(acc[0], val[0]), sorted(set(acc[1] + val[1]))),
+                    lambda a, b: (combFunc(a[0], b[0]), sorted(set(a[1] + b[1])))]
         
-        case _:
-            print("Method currently not supported.")
-            exit(1)         
+        # RDD.foldByKey(zeroValue: V, func: Callable[[V, V], V], numPartitions: Optional[int] = None, 
+        # partitionFunc: Callable[[K], int] = <function portable_hash>) → pyspark.rdd.RDD[Tuple[K, V]]
+        case "foldByKey":
+            zeroValue, func = args
+            args = [(zeroValue, []), lambda acc, val: (func(acc[0], val[0]), sorted(set(acc[1] + val[1])))]
+            
+        # RDD.combineByKey(createCombiner: Callable[[V], U], mergeValue: Callable[[U, V], U], mergeCombiners: Callable[[U, U], U], 
+        # numPartitions: Optional[int] = None, partitionFunc: Callable[[K], int] = <function portable_hash>) → pyspark.rdd.RDD[Tuple[K, U]]
+        # Three functions???
+        # createCombiner = handling of first val per key
+        # mergeValue = handling val merged into first val: val --> accumulator acc
+        # mergeCombiners = handling merge vals from different partitions
+        case "combineByKey":
+            createCombiner, mergeValue, mergeCombiners = args
+            args = [lambda val: (createCombiner(val[0]), val[1]), 
+                    lambda acc, val: (mergeValue(acc[0], val[0]), sorted(set(acc[1] + val[1]))),
+                    lambda a, b: (mergeCombiners(a[0], b[0]), sorted(set(a[1] + b[1])))]
+
+        # RDD.groupByKey(numPartitions: Optional[int] = None, partitionFunc: 
+        # Callable[[K], int] = <function portable_hash>) → pyspark.rdd.RDD[Tuple[K, Iterable[V]]]
+        case "groupByKey" | _:
+            pass
+
+    # Actual func execution happens here
+    method = getattr(unwrapped, methodstr)
+    processed = method(*args)
+
+    # Postprocessing, unwrapping Iterabble[V] for StampedValue processing
+    if methodstr == "groupByKey":
+        processed = processed.mapValues(lambda iterable: ([val for val, _ in iterable], 
+                                                          sorted({line for _, lines in iterable for line in lines})))
+
+    rewrapped = processed.map(lambda x: (StampedValue((x[0], x[1][0]), x[1][1])))
+    return rewrapped
+
 
 
 # NOTE: User passes the sort they want + args
