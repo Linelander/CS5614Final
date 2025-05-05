@@ -1,7 +1,7 @@
-# Supported Functions
-## Many-to-many
-reduceByKey, groupByKey, aggregateByKey, foldByKey, groupByKey, stampSort for sorting, joins, cartesian, union
-## One-to-One
+## Supported Functions
+### Many-to-many
+reduceByKey, groupByKey, aggregateByKey, foldByKey, groupByKey, sorting through stampSort, joins, cartesian, union
+### One-to-One
 map, flatMap, filter, any arithmetic operation
-## One-to-Many
-Any arbitrary function
+### One-to-Many
+Any function
