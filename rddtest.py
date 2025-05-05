@@ -88,7 +88,29 @@ print(result2.collect())
 
 
 print("----------- MANY-TO-MANY TEST, AGGREGATE FOLD AND COMBINE ----------")
-rdd_many1 = StampMath.manyToMany
+rdd_many1reg = sc.parallelize([("a", 1), ("b", 1), ("a", 2)])
+rdd_many1 = StampMath.stampNewRDD(sc.parallelize([("a", 1), ("b", 1), ("a", 2)]))
+seqFunc = (lambda x, y: (x[0] + y, x[1] + 1))
+combFunc = (lambda x, y: (x[0] + y[0], x[1] + y[1]))
+grouped_many = StampMath.manyToMany(rdd_many1, "aggregateByKey", (0, 0), seqFunc, combFunc)
+print(sorted(rdd_many1reg.aggregateByKey((0, 0), seqFunc, combFunc).collect()))
+print(grouped_many.collect())
+
+def to_list(a):
+    return [a]
+
+def append(a, b):
+    a.append(b)
+    return a
+
+def extend(a, b):
+    a.extend(b)
+    return a
+
+grouped_many = StampMath.manyToMany(rdd_many1, "combineByKey", to_list, append, extend)
+print(grouped_many.collect())
+print(sorted(rdd_many1reg.combineByKey(to_list, append, extend).collect()))
+exit(1)
 
 
 print("----------- REGULAR FLATMAP TEST ----------")
