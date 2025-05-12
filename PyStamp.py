@@ -1,23 +1,6 @@
 import operator
 import inspect
 
-
-# TODO: toString() for StampedValues
-# TODO: use copy() to prevent issues with mutable state
-
-
-# TODO: Perform an operation by key. Only spread taint within keys. Needs to work
-# def manyToOne(resilient, methodstr, *args):
-    # map stamped values in resilient to tuples. add caller line number here
-    # perform keyed operation. allow the operation itself to combine line numbers
-    # rewrap data into stamped values
-
-# TODO: Maybe this is a better approach? for things like reduce by key
-# def keyedOp(resilient, methodstr, *args):
-
-# def stampJoin(rdd1, rdd2, join):
-
-
 # Will hold an RDD and relevant line numbers
 class StampedValue:
     def __init__(self, val, line_num):
@@ -26,37 +9,6 @@ class StampedValue:
 
     def __repr__(self):
         return f"${self.value}, {self.line_numbers}$"
-
-# Perform simple arithmetic with stamping outside of RDDs
-def arithmetic(operation, *args):
-    # [lines] inherits line numbers of all number arguments
-    lines = []
-    
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back
-    line_num = caller_frame.f_lineno
-    
-    if type(args[0]) == StampedValue:
-        x = args[0].value
-        lines += [num for num in args[0].line_numbers]
-    else:
-        x = args[0]
-    
-    i = 1
-    while i < len(args):
-        if type(args[i]) == StampedValue:
-            x = operation(x, args[i].value)
-            lines += [num for num in args[i].line_numbers]
-        else:
-            x = operation(x, args[i])
-        i+=1
-    
-    # add the line number this function was called
-    lines += [line_num]
-
-    # Stamp x with [lines]
-    final = StampedValue(x, lines)
-    return final
 
 def oneToMany(resilient, methodstr, *args):
     lines_list = []
@@ -86,7 +38,7 @@ def stampMap(resilient, methodstr, argF):
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
 
-    # NOTE: deal with the stamped value directly (no unpacking required)
+    # Deals with the stamped value directly (no unpacking required)
     def extendStamp(stamped):
         result = argF(stamped.value)  # argF is user's mapping function
         new_lines = stamped.line_numbers + [line_num]
@@ -96,7 +48,7 @@ def stampMap(resilient, methodstr, argF):
         else:
             return StampedValue(result, new_lines)
 
-    # call extendStamp on everything in the RDD
+    # Call extendStamp on everything in the RDD
     return resilient.map(extendStamp) if methodstr != "flatMap" else resilient.flatMap(extendStamp)
 
 def stampFilter(resilient, argF):
@@ -115,7 +67,6 @@ def stampFilter(resilient, argF):
     
 
 def manyToMany(resilient, methodstr, *args):
-    import inspect
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
@@ -192,7 +143,7 @@ def stampSort(resilient, methodStr, *args, **kwargs):
     return rewrapped
 
 
-# NOTE: turns newly created vanilla RDDs into RDDs of stamped values. Use inline with parallelize, textFile, etc.
+# Turns newly created vanilla RDDs into RDDs of stamped values. Use inline with parallelize, textFile, etc.
 def stampNewRDD(resilient):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
@@ -200,22 +151,13 @@ def stampNewRDD(resilient):
     return resilient.map(lambda x: StampedValue(x, [line_num]))
 
 
-# NOTE: Add the current line number to all StampedValues in RDD resilient
-def adHocStamp(resilient):
-    frame = inspect.currentframe()
-    caller_frame = frame.f_back
-    line_num = caller_frame.f_lineno
-    
-    return resilient.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
-
-# NOTE: Handles joins and cartesian
-def stampedMeld(rdd1, rdd2, methodStr):
+# Handles joins and cartesian
+def stampMeld(rdd1, rdd2, methodStr):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno
 
     def wrap(pair):
-        # NOTE debug
         print("pair key: " + str(pair[0]))
         print("pair value: " + str(pair[1]))
         key, values = pair
@@ -233,8 +175,8 @@ def stampedMeld(rdd1, rdd2, methodStr):
         value_left, lines_left = left
         value_right, lines_right = right
 
-        # Connor NOTE: I'm tupling valueLeft and value_right to match vanilla pyspark
-        # lay them out the same way pyspark does normally (key off to the side, left and right val tupled together)
+        # Tuple valueLeft and value_right to match vanilla pyspark
+        # Lay them out the same way pyspark does normally (key off to the side, left and right val tupled together)
         accrued_values = (key, (value_left, value_right))
         accrued_lines = sorted(set(lines_left + lines_right))
         return StampedValue(accrued_values, accrued_lines)
@@ -260,7 +202,7 @@ def stampedMeld(rdd1, rdd2, methodStr):
 
 
 # Very simple parser for union
-def stampedUnion(rdd1, rdd2):
+def stampUnion(rdd1, rdd2):
     frame = inspect.currentframe()
     caller_frame = frame.f_back
     line_num = caller_frame.f_lineno

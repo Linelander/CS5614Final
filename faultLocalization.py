@@ -14,7 +14,32 @@ def recordTestExecution(dataResults: list[dict[str, bool]], lines_visited: list[
 
 
 def computeSuspiciousness(codeLines, dataResults, line_nos):
+    """
+    method:
+       'tarantula'  – uses the Tarantula formula
+       'spectra'    – uses the Ochiai Spectra formula
+       'kulczynski' - uses the Kulczynski formula
 
+    Formulas:
+
+    Tarantula:
+    (failCoverage(i) / totalFailTests)
+    —————————————————————————————
+    (failCoverage(i) / totalFailTests) + (passCoverage(i) / totalPassTests)
+
+    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    Spectra (Ochiai):
+    failCoverage(i)
+    ——————————————————————————
+    sqrt( totalFailTests * (failCoverage(i) + passCoverage(i)) )
+
+    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+    Kulczynski:
+      0.5 * (failCoverage(i) / totalFailTests) + 0.5 * (failCoverage(i) / (failCoverage(i) + passCoverage(i)))
+
+    """
     line_number_to_index = {ln: idx for idx, ln in enumerate(line_nos)}
     totalLineNumber = len(codeLines)
     totalPasses = 0
