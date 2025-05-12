@@ -1,4 +1,3 @@
-import operator
 import inspect
 
 # Will hold an RDD and relevant line numbers

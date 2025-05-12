@@ -2,9 +2,9 @@ from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import PyStamp
 import faultLocalization
-import operator
 import os
 import sys
+
 
 # Lines: 10-25
 def example1(input_rdd):
@@ -48,22 +48,27 @@ if __name__ == "__main__":
     sorted_test1 = sorted(test1_result, key=lambda x: x[0])
     print("test1 output", sorted_test1, test1_lines)
     test1_bool = test1_result == [('blue', 2), ('red', 1)]
+
     test2_result, test2_lines = example1(test2_rdd)
     sorted_test2 = sorted(test2_result, key=lambda x: x[0])
     print("test2 output", sorted_test2, test2_lines)
     test2_bool = test2_result == [('blue', 2), ('red', 2)]
+    
     test3_result, test3_lines = example1(test3_rdd)
     sorted_test3 = sorted(test3_result, key=lambda x: x[0])
     print("test3 output", sorted_test3, test3_lines)
     test3_bool = test3_result == [('blue', 3)]
+    
     test4_result, test4_lines = example1(test4_rdd)
     sorted_test4 = sorted(test4_result, key=lambda x: x[0])
     print("test4 output", sorted_test4, test4_lines)
     test4_bool = test4_result == [('blue', 3), ('red', 1)]
+    
     test5_result, test5_lines = example1(test5_rdd)
     sorted_test5 = sorted(test5_result, key=lambda x: x[0])
     print("test5 output", sorted_test5, test5_lines)
     test5_bool = test5_result == [('blue', 2), ('green', 2), ('red', 1), ('yellow', 1)]
+    
     test6_result, test6_lines = example1(test6_rdd)
     sorted_test6 = sorted(test6_result, key=lambda x: x[0])
     print("test6 output", sorted_test6, test6_lines)
