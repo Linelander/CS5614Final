@@ -207,3 +207,11 @@ def stampUnion(rdd1, rdd2):
     line_num = caller_frame.f_lineno
     unioned = rdd1.union(rdd2)
     return unioned.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
+
+# Add the current line number to all StampedValues in RDD resilient
+def adHocStamp(resilient):
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    line_num = caller_frame.f_lineno
+    
+    return resilient.map(lambda x: StampedValue(x.value, x.line_numbers + [line_num]))
