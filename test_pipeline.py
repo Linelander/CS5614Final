@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-import StampMath
+import PyStamp
 import faultLocalization
 import operator
 import os
@@ -8,20 +8,20 @@ import sys
 
 # Lines: 10-25
 def example1(input_rdd):
-    stamped_rdd = StampMath.stampNewRDD(input_rdd)
-    count_rdd = StampMath.stampMap(stamped_rdd, "map", lambda x: (x, 1))
+    stamped_rdd = PyStamp.stampNewRDD(input_rdd)
+    count_rdd = PyStamp.stampMap(stamped_rdd, "map", lambda x: (x, 1))
 
     # Branching logic
-    checkBrown = StampMath.stampMap(count_rdd, "map", lambda x: (x[0].lower() == "brown"))
+    checkBrown = PyStamp.stampMap(count_rdd, "map", lambda x: (x[0].lower() == "brown"))
     hasBrown = any([tfval.value for tfval in checkBrown.collect()])
     
     # This is meant to filter out "brown"
     if hasBrown:
-        agg_prep = StampMath.stampFilter(count_rdd, lambda x: x[0].lower() == "brown") # This line is wrong
+        agg_prep = PyStamp.stampFilter(count_rdd, lambda x: x[0].lower() == "brown") # This line is wrong
     else:
         agg_prep = count_rdd
         
-    agg_rdd = StampMath.manyToMany(agg_prep, "reduceByKey", lambda x, y: x+y)
+    agg_rdd = PyStamp.manyToMany(agg_prep, "reduceByKey", lambda x, y: x+y)
     result = agg_rdd.collect()
     
     return [x.value for x in result], list(sorted(set(line for y in result for line in y.line_numbers)))
@@ -72,15 +72,15 @@ if __name__ == "__main__":
     test_data_results = []
     line_nos = [11, 12, 15, 16, 19, 20, 21, 22, 24, 25, 27]
     code_lines = [
-        "stamped_rdd = StampMath.stampNewRDD(input_rdd)",
-        "count_rdd = StampMath.stampMap(stamped_rdd, 'map', lambda x: (x, 1))",
-        "checkBrown = StampMath.stampMap(count_rdd, 'map', lambda x: (x[0].lower() == 'brown'))",
+        "stamped_rdd = PyStamp.stampNewRDD(input_rdd)",
+        "count_rdd = PyStamp.stampMap(stamped_rdd, 'map', lambda x: (x, 1))",
+        "checkBrown = PyStamp.stampMap(count_rdd, 'map', lambda x: (x[0].lower() == 'brown'))",
         "hasBrown = any([tfval.value for tfval in checkBrown.collect()])",
         "if hasBrown:",
-        "    agg_prep = StampMath.stampFilter(count_rdd, lambda x: x[0].lower() == 'brown')  # This line is wrong",
+        "    agg_prep = PyStamp.stampFilter(count_rdd, lambda x: x[0].lower() == 'brown')  # This line is wrong",
         "else:",
         "    agg_prep = count_rdd",
-        "agg_rdd = StampMath.manyToMany(agg_prep, 'reduceByKey', lambda x, y: x + y)",
+        "agg_rdd = PyStamp.manyToMany(agg_prep, 'reduceByKey', lambda x, y: x + y)",
         "result = agg_rdd.collect()",
         "return [x.value for x in result], list(sorted(set(line for y in result for line in y.line_numbers)))"
     ]
