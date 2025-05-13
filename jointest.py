@@ -1,9 +1,9 @@
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-import StampMath
-import operator
+import PyStamp
 import os
 import sys
+
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
@@ -20,11 +20,11 @@ sc = spark.sparkContext
 
 print("-------------- Join MODDED --------------")
 
-one = StampMath.stampNewRDD(sc.parallelize(['a', 'b', 'c']).map(lambda x: (x, 1)))
-two = StampMath.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
+one = PyStamp.stampNewRDD(sc.parallelize(['a', 'b', 'c']).map(lambda x: (x, 1)))
+two = PyStamp.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
 
 # TODO: need a way to handle joins
-joined = StampMath.stampedMeld(one, two, "join")
+joined = PyStamp.stampMeld(one, two, "join")
 
 print(joined.collect())
 
@@ -41,9 +41,9 @@ print(joined2.collect())
 print()
 
 print("---------- Cartesian MODDED ----------")
-one2 = StampMath.stampNewRDD(sc.parallelize(['a', 'b', 'c']))
-two2 = StampMath.stampNewRDD(sc.parallelize(['b', 'a']))
-cartesian = StampMath.stampedMeld(one2, two2, "cartesian")
+one2 = PyStamp.stampNewRDD(sc.parallelize(['a', 'b', 'c']))
+two2 = PyStamp.stampNewRDD(sc.parallelize(['b', 'a']))
+cartesian = PyStamp.stampMeld(one2, two2, "cartesian")
 print(cartesian.collect())
 
 print()
@@ -57,9 +57,9 @@ print(cartesian1.collect())
 print()
 
 print("---------- Union MODDED ----------")
-one4 = StampMath.stampNewRDD(sc.parallelize(['a', 'b']))
-two4 = StampMath.stampNewRDD(sc.parallelize(['c']))
-union4 = StampMath.stampedUnion(one4, two4)
+one4 = PyStamp.stampNewRDD(sc.parallelize(['a', 'b']))
+two4 = PyStamp.stampNewRDD(sc.parallelize(['c']))
+union4 = PyStamp.stampUnion(one4, two4)
 print(union4.collect())
 
 
@@ -73,12 +73,12 @@ print(union5.collect())
 print()
 
 print("-------------- Join2 MODDED --------------")
-one6 = StampMath.stampNewRDD(sc.parallelize(['a']).map(lambda x: (x, 1)))
-two6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a', 'c']).map(lambda x: (x, 1)))
-three6 = StampMath.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
+one6 = PyStamp.stampNewRDD(sc.parallelize(['a']).map(lambda x: (x, 1)))
+two6 = PyStamp.stampNewRDD(sc.parallelize(['b', 'a', 'c']).map(lambda x: (x, 1)))
+three6 = PyStamp.stampNewRDD(sc.parallelize(['b', 'a']).map(lambda x: (x, 1)))
 
-joined6 = StampMath.stampedMeld(one6, two6, "fullOuterJoin")
-joined6_2 = StampMath.stampedMeld(joined6, three6, "join")
+joined6 = PyStamp.stampMeld(one6, two6, "fullOuterJoin")
+joined6_2 = PyStamp.stampMeld(joined6, three6, "join")
 
 print(joined6_2.collect())
 
