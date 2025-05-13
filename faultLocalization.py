@@ -37,14 +37,16 @@ def computeSuspiciousness(codeLines, dataResults, line_nos):
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     Kulczynski:
-      0.5 * (failCoverage(i) / totalFailTests) + 0.5 * (failCoverage(i) / (failCoverage(i) + passCoverage(i)))
+        0.5 * (failCoverage(i) / totalFailTests) + 0.5 * (failCoverage(i) / (failCoverage(i) + passCoverage(i)))
 
     """
     line_number_to_index = {ln: idx for idx, ln in enumerate(line_nos)}
-    totalLineNumber = len(codeLines)
+    # totalLineNumber = len(codeLines)
+    totalLineNumber = len(line_nos)
+
     totalPasses = 0
     totalFails = 0
-
+    
     for t in dataResults:
         if not t['test_pass']:
             totalFails += 1
